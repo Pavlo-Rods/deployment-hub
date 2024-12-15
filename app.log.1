@@ -1,0 +1,131 @@
+2024-11-13 16:24:45,817 - app.modules.dataset.routes - ERROR - Exception while create dataset data in Fakenodo Failed to create deposition in Fakenodo with error: (pymysql.err.OperationalError) (1364, "Field 'ds_metadata' doesn't have a default value")
+[SQL: INSERT INTO deposition (status, doi) VALUES (%(status)s, %(doi)s)]
+[parameters: {'status': 'draft', 'doi': None}]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+Traceback (most recent call last):
+  File "/home/pablo/Documentos/EGC/mantecado-hub-2/venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 1967, in _exec_single_context
+    self.dialect.do_execute(
+  File "/home/pablo/Documentos/EGC/mantecado-hub-2/venv/lib/python3.12/site-packages/sqlalchemy/engine/default.py", line 924, in do_execute
+    cursor.execute(statement, parameters)
+  File "/home/pablo/Documentos/EGC/mantecado-hub-2/venv/lib/python3.12/site-packages/pymysql/cursors.py", line 153, in execute
+    result = self._query(query)
+             ^^^^^^^^^^^^^^^^^^
+  File "/home/pablo/Documentos/EGC/mantecado-hub-2/venv/lib/python3.12/site-packages/pymysql/cursors.py", line 322, in _query
+    conn.query(q)
+  File "/home/pablo/Documentos/EGC/mantecado-hub-2/venv/lib/python3.12/site-packages/pymysql/connections.py", line 563, in query
+    self._affected_rows = self._read_query_result(unbuffered=unbuffered)
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pablo/Documentos/EGC/mantecado-hub-2/venv/lib/python3.12/site-packages/pymysql/connections.py", line 825, in _read_query_result
+    result.read()
+  File "/home/pablo/Documentos/EGC/mantecado-hub-2/venv/lib/python3.12/site-packages/pymysql/connections.py", line 1199, in read
+    first_packet = self.connection._read_packet()
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pablo/Documentos/EGC/mantecado-hub-2/venv/lib/python3.12/site-packages/pymysql/connections.py", line 775, in _read_packet
+    packet.raise_for_error()
+  File "/home/pablo/Documentos/EGC/mantecado-hub-2/venv/lib/python3.12/site-packages/pymysql/protocol.py", line 219, in raise_for_error
+    err.raise_mysql_exception(self._data)
+  File "/home/pablo/Documentos/EGC/mantecado-hub-2/venv/lib/python3.12/site-packages/pymysql/err.py", line 150, in raise_mysql_exception
+    raise errorclass(errno, errval)
+pymysql.err.OperationalError: (1364, "Field 'ds_metadata' doesn't have a default value")
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/pablo/Documentos/EGC/mantecado-hub-2/app/modules/fakenodo/services.py", line 63, in create_new_deposition
+    deposition = self.deposition_repository.create_new_deposition(metadata=metadataJSON)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pablo/Documentos/EGC/mantecado-hub-2/app/modules/fakenodo/repositories.py", line 10, in create_new_deposition
+    return self.create(metadata=metadata)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pablo/Documentos/EGC/mantecado-hub-2/core/repositories/BaseRepository.py", line 17, in create
+    self.session.commit()
+  File "/home/pablo/Documentos/EGC/mantecado-hub-2/venv/lib/python3.12/site-packages/sqlalchemy/orm/scoping.py", line 597, in commit
+    return self._proxied.commit()
+           ^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pablo/Documentos/EGC/mantecado-hub-2/venv/lib/python3.12/site-packages/sqlalchemy/orm/session.py", line 2017, in commit
+    trans.commit(_to_root=True)
+  File "<string>", line 2, in commit
+  File "/home/pablo/Documentos/EGC/mantecado-hub-2/venv/lib/python3.12/site-packages/sqlalchemy/orm/state_changes.py", line 139, in _go
+    ret_value = fn(self, *arg, **kw)
+                ^^^^^^^^^^^^^^^^^^^^
+  File "/home/pablo/Documentos/EGC/mantecado-hub-2/venv/lib/python3.12/site-packages/sqlalchemy/orm/session.py", line 1302, in commit
+    self._prepare_impl()
+  File "<string>", line 2, in _prepare_impl
+  File "/home/pablo/Documentos/EGC/mantecado-hub-2/venv/lib/python3.12/site-packages/sqlalchemy/orm/state_changes.py", line 139, in _go
+    ret_value = fn(self, *arg, **kw)
+                ^^^^^^^^^^^^^^^^^^^^
+  File "/home/pablo/Documentos/EGC/mantecado-hub-2/venv/lib/python3.12/site-packages/sqlalchemy/orm/session.py", line 1277, in _prepare_impl
+    self.session.flush()
+  File "/home/pablo/Documentos/EGC/mantecado-hub-2/venv/lib/python3.12/site-packages/sqlalchemy/orm/session.py", line 4341, in flush
+    self._flush(objects)
+  File "/home/pablo/Documentos/EGC/mantecado-hub-2/venv/lib/python3.12/site-packages/sqlalchemy/orm/session.py", line 4476, in _flush
+    with util.safe_reraise():
+  File "/home/pablo/Documentos/EGC/mantecado-hub-2/venv/lib/python3.12/site-packages/sqlalchemy/util/langhelpers.py", line 146, in __exit__
+    raise exc_value.with_traceback(exc_tb)
+  File "/home/pablo/Documentos/EGC/mantecado-hub-2/venv/lib/python3.12/site-packages/sqlalchemy/orm/session.py", line 4437, in _flush
+    flush_context.execute()
+  File "/home/pablo/Documentos/EGC/mantecado-hub-2/venv/lib/python3.12/site-packages/sqlalchemy/orm/unitofwork.py", line 466, in execute
+    rec.execute(self)
+  File "/home/pablo/Documentos/EGC/mantecado-hub-2/venv/lib/python3.12/site-packages/sqlalchemy/orm/unitofwork.py", line 642, in execute
+    util.preloaded.orm_persistence.save_obj(
+  File "/home/pablo/Documentos/EGC/mantecado-hub-2/venv/lib/python3.12/site-packages/sqlalchemy/orm/persistence.py", line 93, in save_obj
+    _emit_insert_statements(
+  File "/home/pablo/Documentos/EGC/mantecado-hub-2/venv/lib/python3.12/site-packages/sqlalchemy/orm/persistence.py", line 1233, in _emit_insert_statements
+    result = connection.execute(
+             ^^^^^^^^^^^^^^^^^^^
+  File "/home/pablo/Documentos/EGC/mantecado-hub-2/venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 1418, in execute
+    return meth(
+           ^^^^^
+  File "/home/pablo/Documentos/EGC/mantecado-hub-2/venv/lib/python3.12/site-packages/sqlalchemy/sql/elements.py", line 515, in _execute_on_connection
+    return connection._execute_clauseelement(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pablo/Documentos/EGC/mantecado-hub-2/venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 1640, in _execute_clauseelement
+    ret = self._execute_context(
+          ^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pablo/Documentos/EGC/mantecado-hub-2/venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 1846, in _execute_context
+    return self._exec_single_context(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pablo/Documentos/EGC/mantecado-hub-2/venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 1986, in _exec_single_context
+    self._handle_dbapi_exception(
+  File "/home/pablo/Documentos/EGC/mantecado-hub-2/venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 2353, in _handle_dbapi_exception
+    raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+  File "/home/pablo/Documentos/EGC/mantecado-hub-2/venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 1967, in _exec_single_context
+    self.dialect.do_execute(
+  File "/home/pablo/Documentos/EGC/mantecado-hub-2/venv/lib/python3.12/site-packages/sqlalchemy/engine/default.py", line 924, in do_execute
+    cursor.execute(statement, parameters)
+  File "/home/pablo/Documentos/EGC/mantecado-hub-2/venv/lib/python3.12/site-packages/pymysql/cursors.py", line 153, in execute
+    result = self._query(query)
+             ^^^^^^^^^^^^^^^^^^
+  File "/home/pablo/Documentos/EGC/mantecado-hub-2/venv/lib/python3.12/site-packages/pymysql/cursors.py", line 322, in _query
+    conn.query(q)
+  File "/home/pablo/Documentos/EGC/mantecado-hub-2/venv/lib/python3.12/site-packages/pymysql/connections.py", line 563, in query
+    self._affected_rows = self._read_query_result(unbuffered=unbuffered)
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pablo/Documentos/EGC/mantecado-hub-2/venv/lib/python3.12/site-packages/pymysql/connections.py", line 825, in _read_query_result
+    result.read()
+  File "/home/pablo/Documentos/EGC/mantecado-hub-2/venv/lib/python3.12/site-packages/pymysql/connections.py", line 1199, in read
+    first_packet = self.connection._read_packet()
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pablo/Documentos/EGC/mantecado-hub-2/venv/lib/python3.12/site-packages/pymysql/connections.py", line 775, in _read_packet
+    packet.raise_for_error()
+  File "/home/pablo/Documentos/EGC/mantecado-hub-2/venv/lib/python3.12/site-packages/pymysql/protocol.py", line 219, in raise_for_error
+    err.raise_mysql_exception(self._data)
+  File "/home/pablo/Documentos/EGC/mantecado-hub-2/venv/lib/python3.12/site-packages/pymysql/err.py", line 150, in raise_mysql_exception
+    raise errorclass(errno, errval)
+sqlalchemy.exc.OperationalError: (pymysql.err.OperationalError) (1364, "Field 'ds_metadata' doesn't have a default value")
+[SQL: INSERT INTO deposition (status, doi) VALUES (%(status)s, %(doi)s)]
+[parameters: {'status': 'draft', 'doi': None}]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/pablo/Documentos/EGC/mantecado-hub-2/app/modules/dataset/routes.py", line 73, in create_dataset
+    fakenodo_response_json = fakenodo_service.create_new_deposition(dataset.ds_meta_data)
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pablo/Documentos/EGC/mantecado-hub-2/app/modules/fakenodo/services.py", line 71, in create_new_deposition
+    raise Exception(f"Failed to create deposition in Fakenodo with error: {str(error400)}")
+Exception: Failed to create deposition in Fakenodo with error: (pymysql.err.OperationalError) (1364, "Field 'ds_metadata' doesn't have a default value")
+[SQL: INSERT INTO deposition (status, doi) VALUES (%(status)s, %(doi)s)]
+[parameters: {'status': 'draft', 'doi': None}]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)

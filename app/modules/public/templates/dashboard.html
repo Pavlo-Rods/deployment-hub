@@ -1,0 +1,127 @@
+{% extends "base_template.html" %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="text-center">Data Dashboard</h2>
+    
+    <div class="row">
+        <!-- Gráfico de datasets vs feature models -->
+        <div class="col-md-4 mb-4">
+            <canvas id="countChart"></canvas>
+        </div>
+
+        <!-- Gráfico de descargas -->
+        <div class="col-md-4 mb-4">
+            <canvas id="downloadChart"></canvas>
+        </div>
+
+        <!-- Gráfico de vistas -->
+        <div class="col-md-4 mb-4">
+            <canvas id="viewChart"></canvas>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // Data fetched from backend (Jinja variables)
+        const labels = ['Datasets', 'Feature Models'];
+        
+        // Data for counting datasets and feature models
+        const countData = [{{ datasets_counter }}, {{ feature_models_counter }}];
+        
+        // Data for downloads
+        const downloadData = [{{ total_dataset_downloads }}, {{ total_feature_model_downloads }}];
+        
+        // Data for views
+        const viewData = [{{ total_dataset_views }}, {{ total_feature_model_views }}];
+        
+        // Gráfico de cantidad (datasets vs feature models)
+        const countCtx = document.getElementById('countChart').getContext('2d');
+        new Chart(countCtx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Cantidad',
+                    data: countData,
+                    backgroundColor: ['rgba(255, 99, 132, 0.2)', 'rgba(54, 162, 235, 0.2)'],
+                    borderColor: ['rgba(255, 99, 132, 1)', 'rgba(54, 162, 235, 1)'],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    },
+                    title: {
+                        display: true,
+                        text: 'Cantidad de Datasets y Feature Models'
+                    }
+                }
+            }
+        });
+
+        // Gráfico de descargas
+        const downloadCtx = document.getElementById('downloadChart').getContext('2d');
+        new Chart(downloadCtx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Descargas',
+                    data: downloadData,
+                    backgroundColor: ['rgba(75, 192, 192, 0.2)', 'rgba(153, 102, 255, 0.2)'],
+                    borderColor: ['rgba(75, 192, 192, 1)', 'rgba(153, 102, 255, 1)'],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    },
+                    title: {
+                        display: true,
+                        text: 'Total de Descargas'
+                    }
+                }
+            }
+        });
+
+        // Gráfico de vistas
+        const viewCtx = document.getElementById('viewChart').getContext('2d');
+        new Chart(viewCtx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Vistas',
+                    data: viewData,
+                    backgroundColor: ['rgba(255, 159, 64, 0.2)', 'rgba(255, 205, 86, 0.2)'],
+                    borderColor: ['rgba(255, 159, 64, 1)', 'rgba(255, 205, 86, 1)'],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    },
+                    title: {
+                        display: true,
+                        text: 'Total de Vistas'
+                    }
+                }
+            }
+        });
+    </script>
+{% endblock %}

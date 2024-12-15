@@ -1,0 +1,596 @@
+{% extends "base_template.html" %} {% block title %}View dataset{% endblock %} {% block head_extra %}
+<style>
+    .option-button {
+        display: block;
+        width: 100%;
+        margin-bottom: 5px;
+    }
+    
+    .option-button:last-child {
+        margin-bottom: 0;
+    }
+    .rating {
+        display: flex;
+        justify-content: center;
+        direction: rtl;
+        font-size: 3rem; /* Ajusta el tamaño aquí */
+        margin-top: 10px;
+    }
+    .rating input {
+        display: none;
+    }
+    .rating label {
+        cursor: pointer;
+        color: #ddd; /* Color gris para las estrellas sin seleccionar */
+        transition: color 0.2s;
+    }
+    .rating label:hover,
+    .rating label:hover ~ label,
+    .rating input:checked ~ label {
+        color: #ffc107; /* Color dorado para las estrellas seleccionadas */
+    }
+</style>
+{% endblock %} {% block content %}
+
+<div class="row mb-3">
+
+    <div class="col-6 d-flex align-items-center">
+        <a href="/explore" class="btn btn-primary btn-sm me-2" id="search" style="border-radius: 5px;">
+            <i data-feather="search" class="center-button-icon"></i>
+            Explore more datasets
+        </a>
+        <!-- Botón de valoración -->
+        <button class="btn btn-primary btn-sm me-2" id="rate-button" style="border-radius: 5px;" data-bs-toggle="modal" data-bs-target="#rateModal">
+            <i data-feather="star"></i> Rate this dataset
+        </button>
+        <!-- Promedio de valoraciones -->
+        <span class="badge bg-warning text-dark" id="average-rating">
+            Average Rating: {{ average_rating ~ " stars" if average_rating else 'No ratings yet' }}
+        </span>
+    </div>
+
+</div>
+
+<div class="row">
+    <!-- First Column -->
+     
+    <div class="col-md-8">
+        <div style="display: flex; justify-content: space-between;">
+            <h1 style="margin-left: 0rem;"><b>{{ dataset.ds_meta_data.title }}</b></h1>
+            <div style="display: flex; justify-content: space-between;">
+                <a href="/explore" class="btn btn-primary btn-sm" id="search" style="border-radius: 5px; margin-bottom: 1rem; margin-right: 1rem;">
+                    <i data-feather="search" class="center-button-icon"></i> Explore more datasets
+                </a>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col">
+                <div class="list-group">
+
+                    <div class="list-group-item">
+
+                        <div class="row">
+                            <div class="col-12 d-flex justify-content-between align-items-center">
+                                <h4 style="margin-bottom: 0px">UVL models</h4>
+                                <h4 style="margin-bottom: 0px;"><span class="badge bg-dark">{{ dataset.get_files_count()
+                                        }}</span></h4>
+                            </div>
+                            
+                        </div>
+
+                    </div>
+
+
+                    {% for feature_model in dataset.feature_models %} {% for file in feature_model.files %}
+                    <div class="list-group-item">
+
+                        <div class="row">
+                            <div class="col-12">
+
+                                <div class="row">
+                                    <div class="col-8">
+                                        <i data-feather="file"></i> {{ file.name }}
+                                        <br>
+                                        <small class="text-muted">({{ file.get_formatted_size() }})</small>
+                                    </div>
+                                    <div class="col-2">
+                                        <div id="check_{{ file.id }}">
+                                        </div>
+                                    </div>
+                                </div>
+
+
+                            </div>
+                            <div class="col-12 text-end">
+
+                                <!-- Botón para valorar el modelo -->
+                                <button onclick="openRateModelModal('{{ file.id }}')" class="btn btn-outline-warning btn-sm" style="border-radius: 5px;">
+                                    <i data-feather="star"></i> Rate
+                                </button>
+                                
+                                <!-- Media de valoraciones del modelo -->
+                                <span class="badge bg-warning text-dark" id="model-average-rating-{{ file.id }}">
+                                        {{ feature_model.average_rating ~ " stars" if feature_model.average_rating else 'No ratings' }}                                
+                                </span>
+                            
+                                <!-- Botón para ver el archivo -->
+
+                                <button onclick="viewFile('{{ file.id }}')" class="btn btn-outline-secondary btn-sm" style="border-radius: 5px;">
+                                    <i data-feather="eye"></i> View
+                                </button>
+
+
+                                <div class="btn-group" role="group">
+                                    <button id="btnGroupDrop{{ file.id }}" type="button" class="btn btn-outline-primary btn-sm dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false" style=" border-radius: 5px;">
+                                        <i data-feather="check"></i> Check
+                                    </button>
+                                    <ul class="dropdown-menu" aria-labelledby="btnGroupDrop{{ file.id }}">
+                                        <li>
+                                            <a class="dropdown-item" href="javascript:void(0);" onclick="checkUVL('{{ file.id }}')">Syntax check</a>
+                                        </li>
+                                    </ul>
+                                </div>
+
+                                <div class="btn-group" role="group">
+                                    <button id="btnGroupDropExport{{ file.id }}" type="button" class="btn btn-primary btn-sm dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false" style=" border-radius: 5px;">
+                                        <i data-feather="download"></i> Export
+                                    </button>
+                                    <ul class="dropdown-menu" aria-labelledby="btnGroupDropExport{{ file.id }}">
+                                        <li>
+                                            <a class="dropdown-item" href="{{ url_for('hubfile.download_file', file_id=file.id) }}">
+                                                UVL
+                                            </a>
+                                            <a class="dropdown-item" href="{{ url_for('flamapy.to_glencoe', file_id=file.id) }}">
+                                                Glencoe
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a class="dropdown-item" href="{{ url_for('flamapy.to_cnf', file_id=file.id) }}">
+                                                DIMACS
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a class="dropdown-item" href="{{ url_for('flamapy.to_splot', file_id=file.id) }}">
+                                                SPLOT
+                                            </a>
+                                        </li>
+                                    </ul>
+                                    
+                                </div>
+
+
+
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Modal-->
+                    <div class="modal fade" id="fileViewerModal" tabindex="-1" aria-labelledby="fileViewerModalLabel" aria-hidden="true">
+                        <div class="modal-dialog modal-lg" style="height: 80vh; display: flex; align-items: center;">
+                            <div class="modal-content" style="height: 50vh;">
+                                <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center;">
+                                    <h5 class="modal-title" id="fileViewerModalLabel">Feature model view
+                                    </h5>
+                                    <div>
+                                        <a href="#" class="btn btn-outline-primary btn-sm" id="downloadButton" style="margin-right: 5px; margin-bottom: 5px; border-radius: 5px;">
+                                            <i data-feather="download"></i>
+                                        </a>
+                                        <button onclick="copyToClipboard()" class="btn btn-outline-secondary btn-sm" style="margin-right: 5px; margin-bottom: 5px; border-radius: 5px;">
+                                            <i data-feather="copy"></i>
+                                        </button>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                </div>
+                                <div class="modal-body" style="overflow-y: auto; height: calc(100vh - 50px);">
+                                    <pre id="fileContent" style="height: 100%; overflow-y: auto; white-space: pre-wrap; word-wrap: break-word; background-color: #f5f5f5; padding: 20px; border-radius: 5px; border: 1px solid #ccc;"></pre>
+
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %} {% endfor %}
+                </div>
+
+            </div>
+        </div>
+        <div class="card " style="margin-top: 1rem; ">
+
+
+            <div class="card-body ">
+
+                <h3> Related publication </h3>
+
+                David Romero-Organvidez, José A. Galindo, Chico Sundermann, Jose-Miguel Horcas, David Benavides,
+                <i>UVLHub: A feature model data repository using UVL and open science principles</i>, Journal of Systems and Software, 2024, 112150, ISSN 0164-1212,
+                <a href=" https://doi.org/10.1016/j.jss.2024.112150 " target="_blank ">https://doi.org/10.1016/j.jss.2024.112150</a>
+
+            </div>
+
+            <div class="card-body mt-0 pt-0 ">
+
+                <button onclick="copyText( 'bibtex_cite') " class="btn btn-light btn-sm " style="border-radius: 5px; margin-right: 10px ">
+                    <i data-feather="clipboard " class="center-button-icon "></i>
+                    Copy in BibTex
+                </button>
+
+                <button onclick="copyText( 'ris_cite') " class="btn btn-light btn-sm " style="border-radius: 5px; ">
+                    <i data-feather="clipboard " class="center-button-icon "></i>
+                    Copy in RIS
+                </button>
+
+                <button onclick="copyText( 'apa_cite') " class="btn btn-light btn-sm " style="border-radius: 5px; ">
+                    <i data-feather="clipboard " class="center-button-icon "></i>
+                    Copy in APA
+                </button>
+
+                <button onclick="copyText( 'text_cite') " class="btn btn-light btn-sm " style="border-radius: 5px; ">
+                    <i data-feather="clipboard " class="center-button-icon "></i>
+                    Copy in text
+                </button>
+
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Second Column -->
+     
+    <div class="col-md-4">
+        <div class="col-12 d-flex justify-content-between align-items-center">
+            <h4 style="margin: 0; font-weight: bold; font-size: 1.1rem;">Dataset Information</h4>
+            <span class="badge bg-secondary" style="font-size: 0.8rem;">{{ dataset.get_cleaned_publication_type() }}</span>
+        </div>
+        <p class="text-muted" style="font-size: 0.8rem; margin-top: 6px;">{{ dataset.created_at.strftime('%B %d, %Y at %I:%M %p') }}</p>
+    
+        <hr style="border-top: 1px solid #ddd;">
+    
+        <div class="mb-2">
+            <h5 style="font-size: 0.95rem; font-weight: bold;">Description</h5>
+            <p class="text-muted" style="font-size: 0.85rem;">{{ dataset.ds_meta_data.description }}</p>
+        </div>
+        <hr style="border-top: 1px solid #ddd;">
+    
+        <div class="mb-2">
+            <h5 style="font-size: 0.95rem; font-weight: bold;">Uploaded by</h5>
+            <a href="#" style="font-size: 0.85rem;">{{ dataset.user.profile.surname }}, {{ dataset.user.profile.name }}</a>
+        </div>
+        <hr style="border-top: 1px solid #ddd;">
+    
+        <div class="mb-2">
+            <h5 style="font-size: 0.95rem; font-weight: bold;">Authors</h5>
+            {% for author in dataset.ds_meta_data.authors %}
+            <p class="text-muted" style="font-size: 0.85rem; margin-bottom: 4px;">
+                {{ author.name }} {% if author.affiliation %} ({{ author.affiliation }}) {% endif %} {% if author.orcid %} ({{ author.orcid }}) {% endif %}
+            </p>
+            {% endfor %}
+        </div>
+        <hr style="border-top: 1px solid #ddd;">
+    
+        {% if dataset.ds_meta_data.publication_doi %}
+        <div class="mb-2">
+            <h5 style="font-size: 0.95rem; font-weight: bold;">Publication DOI</h5>
+            <a href="{{ dataset.ds_meta_data.publication_doi }}" style="font-size: 0.85rem; color: #0366d6;">
+                {{ dataset.ds_meta_data.publication_doi }}
+            </a>
+        </div>
+        <hr style="border-top: 1px solid #ddd;">
+        {% endif %}
+    
+        {% if dataset.ds_meta_data.dataset_doi %}
+        <div class="mb-2">
+            <h5 style="font-size: 0.95rem; font-weight: bold;">Zenodo Record</h5>
+            {% if FLASK_ENV == 'production' %}
+            <a href="https://zenodo.org/records/{{ dataset.ds_meta_data.deposition_id }}" target="_blank" style="font-size: 0.85rem; color: #0366d6;">
+                https://zenodo.org/records/{{ dataset.ds_meta_data.deposition_id }}
+            </a>
+            {% elif FLASK_ENV == 'development' %}
+            <a href="https://sandbox.zenodo.org/records/{{ dataset.ds_meta_data.deposition_id }}" target="_blank" style="font-size: 0.85rem; color: #0366d6;">
+                https://sandbox.zenodo.org/records/{{ dataset.ds_meta_data.deposition_id }}
+            </a>
+            {% else %}
+            <a href="https://zenodo.org/records/{{ dataset.ds_meta_data.deposition_id }}" target="_blank" style="font-size: 0.85rem; color: #0366d6;">
+                https://sandbox.zenodo.org/records/{{ dataset.ds_meta_data.deposition_id }}
+            </a>
+            {% endif %}
+        </div>
+        <hr style="border-top: 1px solid #ddd;">
+        {% endif %}
+    
+        <div class="mb-2">
+            <h5 style="font-size: 0.9rem; font-weight: bold;">Tags</h5>
+            {% for tag in dataset.ds_meta_data.tags.split(',') %}
+            <span class="badge bg-secondary" style="font-size: 0.75rem; margin-right: 4px;">{{ tag.strip() }}</span>
+            {% endfor %}
+        </div>
+    
+        {% if dataset.ds_meta_data.dataset_doi %}
+        <div style="padding-top: 0px">
+            <div id="dataset_doi_uvlhub" style="display: none;">
+                {{ dataset.get_uvlhub_doi() }}
+            </div>
+            <button type="button" class="btn doi_button btn-sm" onclick="copyText('dataset_doi_uvlhub')">
+                <span class="button_doi_id">
+                    <i data-feather="clipboard" class="center-button-icon" style="cursor: pointer"></i>
+                    <b>DOI</b>
+                </span>
+                <span class="doi_text">
+                    {{ dataset.get_uvlhub_doi() }}
+                </span>
+            </button>
+        </div>
+        {% endif %}
+    </div>
+</div>
+<!-- HTML del botón de "Upload to Zenodo" -->
+{% if not dataset.ds_meta_data.dataset_doi %}
+<button class="btn btn-outline-success btn-sm" id="uploadToZenodo" style="border-radius: 5px;">
+    Upload to Fakenodo
+</button>
+{% endif %}
+
+<script>
+    document.getElementById("uploadToZenodo").addEventListener("click", function() {
+        const datasetId = '{{ dataset.id }}';  // Asegúrate de que esto no sea null o undefined
+        console.log("datasetId enviado:", datasetId);  // Verifica en la consola del navegador
+    
+        fetch('/dataset/synchronize_datasets', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                datasetId: datasetId
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert("¡Archivo subido a Fakenodo exitosamente!");
+            } else {
+                alert("Hubo un error al subir el archivo.");
+            }
+        })
+        .catch(error => {
+            console.error("Error en la solicitud:", error);
+            alert("Hubo un error en la solicitud.");
+        });
+    });
+    
+</script>
+
+
+<!-- Modal de valoración de datasets-->
+<div class="modal fade" id="rateModal" tabindex="-1" aria-labelledby="rateModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="rateModalLabel">Rate this Dataset</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center">
+                <p class="mb-3">Please rate this dataset</p>
+                <form id="rate-form">
+                    <input type="hidden" name="dataset_id" value="{{ dataset.id }}">
+                    
+                    <!-- Barra de estrellas con indicador de valor -->
+                    <div class="rating">
+                        <input type="radio" name="rating" value="5" id="5"><label for="5">☆</label>
+                        <input type="radio" name="rating" value="4" id="4"><label for="4">☆</label>
+                        <input type="radio" name="rating" value="3" id="3"><label for="3">☆</label>
+                        <input type="radio" name="rating" value="2" id="2"><label for="2">☆</label>
+                        <input type="radio" name="rating" value="1" id="1"><label for="1">☆</label>
+                    </div>
+            
+                    <!-- Mostrar cantidad de estrellas seleccionadas -->
+                    <p id="rating-value" class="text-warning" style="font-size: 1.5rem; margin-top: 10px;">0 Stars</p>
+                </form>                
+            </div>
+            
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="submitRating()">Submit Rating</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de valoración de modelo -->
+<div class="modal fade" id="rateModelModal" tabindex="-1" aria-labelledby="rateModelModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="rateModelModalLabel">Rate this Model</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center">
+                <p class="mb-3">Please rate this model</p>
+                <form id="rate-model-form">
+                    <input type="hidden" id="model-id" name="model_id" value="">
+                    <!-- Barra de estrellas -->
+                    <div class="rating">
+                        <input type="radio" name="rating" value="5" id="model-5"><label for="model-5">☆</label>
+                        <input type="radio" name="rating" value="4" id="model-4"><label for="model-4">☆</label>
+                        <input type="radio" name="rating" value="3" id="model-3"><label for="model-3">☆</label>
+                        <input type="radio" name="rating" value="2" id="model-2"><label for="model-2">☆</label>
+                        <input type="radio" name="rating" value="1" id="model-1"><label for="model-1">☆</label>
+                    </div>
+                    <!-- Mostrar cantidad de estrellas seleccionadas -->
+                    <p id="model-rating-value" class="text-warning" style="font-size: 1.5rem; margin-top: 10px;">0 Stars</p>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="submitModelRating()">Submit Rating</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript" src="https://cdn.jsdelivr.net/pyodide/v0.23.4/full/pyodide.js"></script>
+
+
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        feather.replace();
+    });
+
+    var currentFileId;
+
+    function viewFile(fileId) {
+        fetch(`/file/view/${fileId}`)
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('fileContent').textContent = data.content;
+                currentFileId = fileId;
+                document.getElementById('downloadButton').href = `/file/download/${fileId}`;
+                var modal = new bootstrap.Modal(document.getElementById('fileViewerModal'));
+                modal.show();
+            })
+
+        .catch(error => console.error('Error loading file:', error));
+
+    }
+
+    function showLoading() {
+        document.getElementById("loading").style.display = "initial";
+    }
+
+    function hideLoading() {
+        document.getElementById("loading").style.display = "none";
+    }
+
+    function checkUVL(file_id) {
+        const outputDiv = document.getElementById('check_' + file_id);
+        outputDiv.innerHTML = ''; // Clear previous output
+
+        fetch(`/flamapy/check_uvl/${file_id}`)
+            .then(response => {
+                return response.json().then(data => ({
+                    status: response.status,
+                    data
+                }));
+            })
+            .then(({
+                status,
+                data
+            }) => {
+                if (status === 400) {
+                    // Display errors
+                    if (data.errors) {
+                        outputDiv.innerHTML = '<span class="badge badge-danger">Errors:</span>';
+                        data.errors.forEach(error => {
+                            const errorElement = document.createElement('span');
+                            errorElement.className = 'badge badge-danger';
+                            errorElement.textContent = error;
+                            outputDiv.appendChild(errorElement);
+                            outputDiv.appendChild(document.createElement('br')); // Line break for better readability
+                        });
+                    } else {
+                        outputDiv.innerHTML = `<span class="badge badge-danger">Error: ${data.error}</span>`;
+                    }
+                } else if (status === 200) {
+                    // Display success message
+                    outputDiv.innerHTML = '<span class="badge badge-success">Valid Model</span>';
+                } else {
+                    // Handle unexpected status
+                    outputDiv.innerHTML = `<span class="badge badge-warning">Unexpected response status: ${status}</span>`;
+                }
+            })
+            .catch(error => {
+                // Handle fetch errors
+                outputDiv.innerHTML = `<span class="badge badge-danger">An unexpected error occurred: ${error.message}</span>`;
+            });
+    }
+    function copyToClipboard() {
+        console.log('fileContent', document.getElementById('fileContent').textContent);
+        const text = document.getElementById('fileContent').textContent;
+        navigator.clipboard.writeText(text).then(() => {
+            console.log('Text copied to clipboard');
+        }).catch(err => {
+            console.error('Failed to copy text: ', err);
+        });
+    }
+</script>
+<!-- Código para actualizar el valor de la selección de estrellas -->
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const ratingInputs = document.querySelectorAll('.rating input');
+        const ratingValueDisplay = document.getElementById('rating-value');
+    
+        ratingInputs.forEach(input => {
+            input.addEventListener('change', function () {
+                const starValue = this.value; // Obtener el valor del input seleccionado
+                ratingValueDisplay.textContent = `${starValue} Star${starValue > 1 ? 's' : ''}`; // Actualizar el texto
+            });
+        });
+    });
+</script>
+<script>
+    function submitRating() {
+        const form = document.getElementById("rate-form");
+        const formData = new FormData(form);
+        
+        fetch("/dataset/rate", {
+            method: "POST",
+            body: formData,
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log("Respuesta recibida:", data);  // Depuración
+            if (data.average_rating) {
+                document.getElementById("average-rating").textContent = `Average Rating: ${data.average_rating}`;
+            }
+            const modal = bootstrap.Modal.getInstance(document.getElementById("rateModal"));
+            modal.hide();
+        })
+        .catch(error => console.error("Error al enviar la valoración:", error));
+    }
+    
+    document.addEventListener('DOMContentLoaded', function () {
+        feather.replace();
+    });
+    </script>
+
+<script>
+    function openRateModelModal(modelId) {
+        document.getElementById("model-id").value = modelId;
+        const modal = new bootstrap.Modal(document.getElementById("rateModelModal"));
+        modal.show();
+    }
+    
+    function submitModelRating() {
+        const form = document.getElementById("rate-model-form");
+        const formData = new FormData(form);
+
+    fetch("/model/rate", {
+        method: "POST",
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.average_rating) {
+            // Actualiza el promedio de valoraciones en el HTML
+            document.getElementById(`model-average-rating-${data.model_id}`).textContent = `${data.average_rating} Stars`;
+        } else {
+            // Si no hay valoraciones, muestra "No ratings"
+            document.getElementById(`model-average-rating-${data.model_id}`).textContent = "No ratings";
+        }
+        const modal = bootstrap.Modal.getInstance(document.getElementById("rateModelModal"));
+        modal.hide();
+    })
+    .catch(error => console.error("Error al enviar la valoración:", error));
+}
+</script>
+
+<script>
+    // Actualizar el valor de estrellas seleccionadas en el modal
+    document.querySelectorAll('input[name="rating"]').forEach((input) => {
+        input.addEventListener('change', (event) => {
+            const selectedRating = event.target.value;
+            document.getElementById('model-rating-value').textContent = `${selectedRating} Stars`;
+        });
+    });
+</script>
+
+{% endblock %}
